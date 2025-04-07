@@ -1,0 +1,1 @@
+# -AgriAid-Smart-Soil-and-Crop-Advisory-Platform-for-Farmers
