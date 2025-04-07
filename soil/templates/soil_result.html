@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block title %}Soil Analysis Results - AgriSmart{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 offset-md-2">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h4 class="mb-0">Soil Analysis Results</h4>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5>Uploaded Image:</h5>
+                        <img src="{{ url_for('static', filename=image_path) }}" class="img-fluid rounded" alt="Soil Sample">
+                    </div>
+                    <div class="col-md-6">
+                        <h5>Analysis Results:</h5>
+                        <div class="alert alert-success">
+                            <h6>Soil Type: {{ soil_type }}</h6>
+                            <p>Confidence: {{ "%.2f"|format(confidence * 100) }}%</p>
+                        </div>
+                        
+                        <div class="mt-3">
+                            <h6>Soil Characteristics:</h6>
+                            <ul class="list-group">
+                                {% if soil_type == 'Alluvial Soil' %}
+                                    <li class="list-group-item">Rich in potash and lime</li>
+                                    <li class="list-group-item">Good water retention capacity</li>
+                                    <li class="list-group-item">Ideal for rice, wheat, and sugarcane</li>
+                                {% elif soil_type == 'Black Soil' %}
+                                    <li class="list-group-item">High moisture retention</li>
+                                    <li class="list-group-item">Rich in calcium, potassium, and magnesium</li>
+                                    <li class="list-group-item">Suitable for cotton and sugarcane</li>
+                                {% elif soil_type == 'Clay Soil' %}
+                                    <li class="list-group-item">High nutrient content</li>
+                                    <li class="list-group-item">Good water retention</li>
+                                    <li class="list-group-item">Ideal for rice and wheat</li>
+                                {% elif soil_type == 'Red Soil' %}
+                                    <li class="list-group-item">Rich in iron oxide</li>
+                                    <li class="list-group-item">Good drainage properties</li>
+                                    <li class="list-group-item">Suitable for groundnut and pulses</li>
+                                {% endif %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row mt-4">
+                    <div class="col-12 text-center">
+                        <a href="{{ url_for('crop_recommendations') }}" class="btn btn-success btn-lg">View Crop Recommendations</a>
+                        <a href="{{ url_for('soil_classification') }}" class="btn btn-outline-success btn-lg ms-2">Analyze Another Sample</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

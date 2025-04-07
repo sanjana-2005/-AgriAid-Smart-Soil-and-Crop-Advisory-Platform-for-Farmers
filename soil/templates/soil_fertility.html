@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+
+{% block title %}Soil Fertility Assessment - AgriSmart{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 offset-md-2">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h4 class="mb-0">Soil Fertility Assessment</h4>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5>Enter Soil Data</h5>
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <form method="POST">
+                                    <div class="mb-3">
+                                        <label for="nitrogen" class="form-label">Nitrogen (N) Level (kg/ha)</label>
+                                        <input type="number" class="form-control" id="nitrogen" name="nitrogen" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="phosphorus" class="form-label">Phosphorus (P) Level (kg/ha)</label>
+                                        <input type="number" class="form-control" id="phosphorus" name="phosphorus" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="potassium" class="form-label">Potassium (K) Level (kg/ha)</label>
+                                        <input type="number" class="form-control" id="potassium" name="potassium" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="ph" class="form-label">pH Level</label>
+                                        <input type="number" step="0.1" class="form-control" id="ph" name="ph" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="organic_matter" class="form-label">Organic Matter (%)</label>
+                                        <input type="number" step="0.1" class="form-control" id="organic_matter" name="organic_matter" required>
+                                    </div>
+                                    <button type="submit" class="btn btn-success">Assess Fertility</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <h5>Fertility Guidelines</h5>
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table">
+                                        <thead>
+                                            <tr>
+                                                <th>Nutrient</th>
+                                                <th>Low</th>
+                                                <th>Medium</th>
+                                                <th>High</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>Nitrogen (N)</td>
+                                                <td>< 100 kg/ha</td>
+                                                <td>100-200 kg/ha</td>
+                                                <td>> 200 kg/ha</td>
+                                            </tr>
+                                            <tr>
+                                                <td>Phosphorus (P)</td>
+                                                <td>< 20 kg/ha</td>
+                                                <td>20-40 kg/ha</td>
+                                                <td>> 40 kg/ha</td>
+                                            </tr>
+                                            <tr>
+                                                <td>Potassium (K)</td>
+                                                <td>< 150 kg/ha</td>
+                                                <td>150-300 kg/ha</td>
+                                                <td>> 300 kg/ha</td>
+                                            </tr>
+                                            <tr>
+                                                <td>pH Level</td>
+                                                <td>< 6.0</td>
+                                                <td>6.0-7.0</td>
+                                                <td>> 7.0</td>
+                                            </tr>
+                                            <tr>
+                                                <td>Organic Matter</td>
+                                                <td>< 2%</td>
+                                                <td>2-4%</td>
+                                                <td>> 4%</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                {% if fertility_result %}
+                <div class="mt-4">
+                    <h5>Assessment Results</h5>
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="alert alert-{{ fertility_result.status_class }}">
+                                <h6>Overall Fertility Status: {{ fertility_result.status }}</h6>
+                                <p>Score: {{ fertility_result.score }}/10</p>
+                            </div>
+                            
+                            <div class="row mt-3">
+                                <div class="col-md-6">
+                                    <h6>Nutrient Levels</h6>
+                                    <ul class="list-group">
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                                            Nitrogen (N)
+                                            <span class="badge bg-{{ fertility_result.nitrogen_status }}">{{ fertility_result.nitrogen_level }}</span>
+                                        </li>
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                                            Phosphorus (P)
+                                            <span class="badge bg-{{ fertility_result.phosphorus_status }}">{{ fertility_result.phosphorus_level }}</span>
+                                        </li>
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                                            Potassium (K)
+                                            <span class="badge bg-{{ fertility_result.potassium_status }}">{{ fertility_result.potassium_level }}</span>
+                                        </li>
+                                    </ul>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6>Recommendations</h6>
+                                    <ul class="list-group">
+                                        {% for recommendation in fertility_result.recommendations %}
+                                        <li class="list-group-item">{{ recommendation }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <div class="row mt-4">
+                    <div class="col-12 text-center">
+                        <a href="{{ url_for('soil_health') }}" class="btn btn-outline-success">Back to Soil Health</a>
+                        <a href="{{ url_for('fertilizer_recommendation') }}" class="btn btn-success ms-2">Get Fertilizer Recommendations</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

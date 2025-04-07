@@ -1,0 +1,184 @@
+{% extends "base.html" %}
+
+{% block title %}Cultivation Practices - {{ soil_type }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .practices-header {
+        background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)),
+                    url('https://images.unsplash.com/photo-1464226184884-fa280b87c399?ixlib=rb-1.2.1&auto=format&fit=crop&w=1920&q=80');
+        background-size: cover;
+        background-position: center;
+        color: white;
+        padding: 4rem 0;
+        margin: -2rem 0 3rem 0;
+        text-align: center;
+    }
+
+    .soil-info {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+
+    .practice-card {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        margin-bottom: 2rem;
+        overflow: hidden;
+        transition: transform 0.3s ease;
+    }
+
+    .practice-card:hover {
+        transform: translateY(-5px);
+    }
+
+    .practice-header {
+        background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+        color: white;
+        padding: 1rem 1.5rem;
+        font-weight: 600;
+        font-size: 1.2rem;
+    }
+
+    .practice-content {
+        padding: 1.5rem;
+    }
+
+    .practice-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .practice-list li {
+        padding: 0.5rem 0;
+        border-bottom: 1px solid #eee;
+        display: flex;
+        align-items: start;
+    }
+
+    .practice-list li:last-child {
+        border-bottom: none;
+    }
+
+    .practice-list li i {
+        color: var(--primary-color);
+        margin-right: 0.75rem;
+        margin-top: 0.25rem;
+    }
+
+    .crop-section {
+        background: var(--light-bg);
+        padding: 3rem 0;
+        margin: 3rem 0;
+    }
+
+    .back-button {
+        position: fixed;
+        bottom: 2rem;
+        right: 2rem;
+        background: var(--primary-color);
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+    }
+
+    .back-button:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        color: white;
+    }
+
+    @media (max-width: 768px) {
+        .practices-header {
+            padding: 3rem 0;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Header Section -->
+<section class="practices-header">
+    <div class="container">
+        <div class="soil-info">
+            <h1 class="mb-3">Cultivation Practices for {{ soil_type }}</h1>
+            <p class="lead">Comprehensive guide for optimal farming in {{ soil_type }}</p>
+        </div>
+    </div>
+</section>
+
+<!-- General Practices -->
+<section class="container">
+    <div class="practice-card" data-aos="fade-up">
+        <div class="practice-header">
+            <i class="fas fa-seedling me-2"></i>General Practices for {{ soil_type }}
+        </div>
+        <div class="practice-content">
+            <ul class="practice-list">
+                {% for practice in practices['General Practices'] %}
+                <li>
+                    <i class="fas fa-check-circle"></i>
+                    {{ practice }}
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</section>
+
+<!-- Crop-specific Practices -->
+<section class="crop-section">
+    <div class="container">
+        <h2 class="text-center mb-4" data-aos="fade-up">Crop-Specific Cultivation Practices</h2>
+        <div class="row">
+            {% for crop in crops %}
+            <div class="col-md-6" data-aos="fade-up">
+                <div class="practice-card">
+                    <div class="practice-header">
+                        <i class="fas fa-leaf me-2"></i>{{ crop }}
+                    </div>
+                    <div class="practice-content">
+                        <ul class="practice-list">
+                            {% for practice in practices[crop] %}
+                            <li>
+                                <i class="fas fa-check-circle"></i>
+                                {{ practice }}
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- Back to Top Button -->
+<a href="{{ url_for('home') }}" class="back-button" title="Back to Home">
+    <i class="fas fa-home"></i>
+</a>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Add smooth scrolling for anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            document.querySelector(this.getAttribute('href')).scrollIntoView({
+                behavior: 'smooth'
+            });
+        });
+    });
+</script>
+{% endblock %} 

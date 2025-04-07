@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block title %}Soil Classification - AgriSmart{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 offset-md-2">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h4 class="mb-0">Soil Classification</h4>
+            </div>
+            <div class="card-body">
+                <p class="card-text">Upload a clear image of your soil to identify its type. The system will analyze the image and provide detailed information about your soil type.</p>
+                
+                <form method="POST" enctype="multipart/form-data" class="mt-4">
+                    <div class="mb-3">
+                        <label for="file" class="form-label">Select Soil Image</label>
+                        <input type="file" class="form-control" id="file" name="file" accept="image/*" required>
+                        <div class="form-text">Supported formats: JPG, PNG. Maximum file size: 5MB</div>
+                    </div>
+                    
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-success btn-lg">Analyze Soil</button>
+                    </div>
+                </form>
+                
+                <div class="mt-4">
+                    <h5>Tips for Best Results:</h5>
+                    <ul>
+                        <li>Take the photo in natural daylight</li>
+                        <li>Ensure the soil is dry and free from debris</li>
+                        <li>Take a close-up photo of the soil sample</li>
+                        <li>Use a plain background for better contrast</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

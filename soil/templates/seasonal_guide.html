@@ -1,0 +1,700 @@
+{% extends "base.html" %}
+
+{% block title %}Seasonal Guide{% endblock %}
+
+{% block extra_css %}
+<style>
+    .season-selector {
+        background: linear-gradient(135deg, #f5f7fa 0%, #e4e8eb 100%);
+        padding: 2rem;
+        border-radius: 15px;
+        margin: 2rem auto;
+        max-width: 800px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .season-dropdown {
+        width: 100%;
+        padding: 1rem;
+        font-size: 1.2rem;
+        border: 2px solid #4a90e2;
+        border-radius: 8px;
+        background-color: white;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .season-dropdown:hover {
+        border-color: #357abd;
+    }
+
+    .recommendations-container {
+        margin-top: 2rem;
+    }
+
+    .soil-type-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin: 1rem 0;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease;
+        display: none;
+    }
+
+    .soil-type-card:hover {
+        transform: translateY(-5px);
+    }
+
+    .soil-type-card.active {
+        display: block;
+        animation: fadeIn 0.5s ease;
+    }
+
+    .soil-type-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 1rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid #e0e0e0;
+    }
+
+    .soil-icon {
+        font-size: 2rem;
+        margin-right: 1rem;
+        color: #4a90e2;
+    }
+
+    .recommendation-list {
+        list-style: none;
+        padding: 0;
+    }
+
+    .recommendation-item {
+        display: flex;
+        align-items: flex-start;
+        margin: 1rem 0;
+        padding: 1rem;
+        background: #f8f9fa;
+        border-radius: 8px;
+        transition: background-color 0.3s ease;
+    }
+
+    .recommendation-item:hover {
+        background: #e9ecef;
+    }
+
+    .recommendation-icon {
+        color: #2e7d32;
+        margin-right: 1rem;
+        font-size: 1.2rem;
+    }
+
+    .season-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .season-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .season-spring { color: #4CAF50; }
+    .season-summer { color: #FF9800; }
+    .season-autumn { color: #795548; }
+    .season-winter { color: #2196F3; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="season-selector">
+        <div class="season-header">
+            <div id="seasonIcon" class="season-icon">
+                <i class="fas fa-seedling season-spring"></i>
+            </div>
+            <h2 class="mb-4">Seasonal Guide for Soil Management</h2>
+        </div>
+
+        <select id="seasonSelect" class="season-dropdown mb-4">
+            <option value="">Select a Season</option>
+            <option value="spring">Spring (March - May)</option>
+            <option value="summer">Summer (June - August)</option>
+            <option value="autumn">Autumn (September - November)</option>
+            <option value="winter">Winter (December - February)</option>
+        </select>
+
+        <div id="recommendationsContainer" class="recommendations-container">
+            <!-- Spring Recommendations -->
+            <div id="spring" class="soil-type-card">
+                <div class="soil-type-header">
+                    <i class="fas fa-seedling soil-icon season-spring"></i>
+                    <h3>Spring Recommendations</h3>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <h4>Alluvial Soil</h4>
+                        <ul class="recommendation-list">
+                            <li class="recommendation-item">
+                                <i class="fas fa-seedling recommendation-icon"></i>
+                                <div>
+                                    <strong>Recommended Crops:</strong>
+                                    <ul>
+                                        <li>Rice (Early varieties)</li>
+                                        <li>Maize</li>
+                                        <li>Vegetables (Tomatoes, Peppers)</li>
+                                        <li>Jute</li>
+                                        <li>Green Gram</li>
+                                    </ul>
+                                </div>
+                            </li>
+                            <li class="recommendation-item">
+                                <i class="fas fa-list recommendation-icon"></i>
+                                <div>
+                                    <strong>Management Tips:</strong>
+                                    <ul>
+                                        <li>Prepare soil beds early</li>
+                                        <li>Add organic matter</li>
+                                        <li>Install irrigation systems</li>
+                                        <li>Monitor soil moisture</li>
+                                    </ul>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h4>Black Soil</h4>
+                        <ul class="recommendation-list">
+                            <li class="recommendation-item">
+                                <i class="fas fa-seedling recommendation-icon"></i>
+                                <div>
+                                    <strong>Recommended Crops:</strong>
+                                    <ul>
+                                        <li>Cotton</li>
+                                        <li>Sunflower</li>
+                                        <li>Soybean</li>
+                                        <li>Green Vegetables</li>
+                                        <li>Sesame</li>
+                                    </ul>
+                                </div>
+                            </li>
+                            <li class="recommendation-item">
+                                <i class="fas fa-list recommendation-icon"></i>
+                                <div>
+                                    <strong>Management Tips:</strong>
+                                    <ul>
+                                        <li>Deep ploughing</li>
+                                        <li>Improve drainage</li>
+                                        <li>Add organic amendments</li>
+                                        <li>Mulching</li>
+                                    </ul>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="row mt-4">
+                    <div class="col-md-6">
+                        <h4>Red Soil</h4>
+                        <ul class="recommendation-list">
+                            <li class="recommendation-item">
+                                <i class="fas fa-seedling recommendation-icon"></i>
+                                <div>
+                                    <strong>Recommended Crops:</strong>
+                                    <ul>
+                                        <li>Groundnut</li>
+                                        <li>Millet</li>
+                                        <li>Pulses</li>
+                                        <li>Castor</li>
+                                        <li>Sweet Potato</li>
+                                    </ul>
+                                </div>
+                            </li>
+                            <li class="recommendation-item">
+                                <i class="fas fa-list recommendation-icon"></i>
+                                <div>
+                                    <strong>Management Tips:</strong>
+                                    <ul>
+                                        <li>Moisture conservation</li>
+                                        <li>Erosion control</li>
+                                        <li>Regular irrigation</li>
+                                        <li>Organic matter addition</li>
+                                    </ul>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h4>Clay Soil</h4>
+                        <ul class="recommendation-list">
+                            <li class="recommendation-item">
+                                <i class="fas fa-seedling recommendation-icon"></i>
+                                <div>
+                                    <strong>Recommended Crops:</strong>
+                                    <ul>
+                                        <li>Rice</li>
+                                        <li>Wheat</li>
+                                        <li>Sugarcane</li>
+                                        <li>Vegetables</li>
+                                        <li>Legumes</li>
+                                    </ul>
+                                </div>
+                            </li>
+                            <li class="recommendation-item">
+                                <i class="fas fa-list recommendation-icon"></i>
+                                <div>
+                                    <strong>Management Tips:</strong>
+                                    <ul>
+                                        <li>Improve drainage</li>
+                                        <li>Add organic matter</li>
+                                        <li>Careful irrigation</li>
+                                        <li>Avoid soil compaction</li>
+                                    </ul>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Summer Recommendations -->
+            <div id="summer" class="soil-type-card">
+                <div class="soil-type-header">
+                    <i class="fas fa-sun soil-icon season-summer"></i>
+                    <h3>Summer Recommendations</h3>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <h4>Alluvial Soil</h4>
+                        <ul class="recommendation-list">
+                            <li class="recommendation-item">
+                                <i class="fas fa-seedling recommendation-icon"></i>
+                                <div>
+                                    <strong>Recommended Crops:</strong>
+                                    <ul>
+                                        <li>Rice (Main season)</li>
+                                        <li>Cotton</li>
+                                        <li>Sugarcane</li>
+                                        <li>Vegetables</li>
+                                        <li>Maize</li>
+                                    </ul>
+                                </div>
+                            </li>
+                            <li class="recommendation-item">
+                                <i class="fas fa-list recommendation-icon"></i>
+                                <div>
+                                    <strong>Management Tips:</strong>
+                                    <ul>
+                                        <li>Regular irrigation</li>
+                                        <li>Mulching</li>
+                                        <li>Pest monitoring</li>
+                                        <li>Weed control</li>
+                                    </ul>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h4>Black Soil</h4>
+                        <ul class="recommendation-list">
+                            <li class="recommendation-item">
+                                <i class="fas fa-seedling recommendation-icon"></i>
+                                <div>
+                                    <strong>Recommended Crops:</strong>
+                                    <ul>
+                                        <li>Cotton</li>
+                                        <li>Sorghum</li>
+                                        <li>Pigeon Pea</li>
+                                        <li>Soybean</li>
+                                        <li>Mung Bean</li>
+                                    </ul>
+                                </div>
+                            </li>
+                            <li class="recommendation-item">
+                                <i class="fas fa-list recommendation-icon"></i>
+                                <div>
+                                    <strong>Management Tips:</strong>
+                                    <ul>
+                                        <li>Moisture conservation</li>
+                                        <li>Crack filling</li>
+                                        <li>Mulching essential</li>
+                                        <li>Proper drainage</li>
+                                    </ul>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="row mt-4">
+                    <div class="col-md-6">
+                        <h4>Red Soil</h4>
+                        <ul class="recommendation-list">
+                            <li class="recommendation-item">
+                                <i class="fas fa-seedling recommendation-icon"></i>
+                                <div>
+                                    <strong>Recommended Crops:</strong>
+                                    <ul>
+                                        <li>Millets</li>
+                                        <li>Groundnut</li>
+                                        <li>Pulses</li>
+                                        <li>Castor</li>
+                                        <li>Vegetables</li>
+                                    </ul>
+                                </div>
+                            </li>
+                            <li class="recommendation-item">
+                                <i class="fas fa-list recommendation-icon"></i>
+                                <div>
+                                    <strong>Management Tips:</strong>
+                                    <ul>
+                                        <li>Drip irrigation</li>
+                                        <li>Heavy mulching</li>
+                                        <li>Drought management</li>
+                                        <li>Soil conservation</li>
+                                    </ul>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h4>Clay Soil</h4>
+                        <ul class="recommendation-list">
+                            <li class="recommendation-item">
+                                <i class="fas fa-seedling recommendation-icon"></i>
+                                <div>
+                                    <strong>Recommended Crops:</strong>
+                                    <ul>
+                                        <li>Rice</li>
+                                        <li>Okra</li>
+                                        <li>Brinjal</li>
+                                        <li>Green Leafy Vegetables</li>
+                                        <li>Sugarcane</li>
+                                    </ul>
+                                </div>
+                            </li>
+                            <li class="recommendation-item">
+                                <i class="fas fa-list recommendation-icon"></i>
+                                <div>
+                                    <strong>Management Tips:</strong>
+                                    <ul>
+                                        <li>Water management</li>
+                                        <li>Soil aeration</li>
+                                        <li>Organic matter</li>
+                                        <li>Raised beds</li>
+                                    </ul>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Autumn Recommendations -->
+            <div id="autumn" class="soil-type-card">
+                <div class="soil-type-header">
+                    <i class="fas fa-leaf soil-icon season-autumn"></i>
+                    <h3>Autumn Recommendations</h3>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <h4>Alluvial Soil</h4>
+                        <ul class="recommendation-list">
+                            <li class="recommendation-item">
+                                <i class="fas fa-seedling recommendation-icon"></i>
+                                <div>
+                                    <strong>Recommended Crops:</strong>
+                                    <ul>
+                                        <li>Wheat</li>
+                                        <li>Mustard</li>
+                                        <li>Potato</li>
+                                        <li>Peas</li>
+                                        <li>Winter Vegetables</li>
+                                    </ul>
+                                </div>
+                            </li>
+                            <li class="recommendation-item">
+                                <i class="fas fa-list recommendation-icon"></i>
+                                <div>
+                                    <strong>Management Tips:</strong>
+                                    <ul>
+                                        <li>Field preparation</li>
+                                        <li>Residue management</li>
+                                        <li>Soil testing</li>
+                                        <li>Winter preparation</li>
+                                    </ul>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h4>Black Soil</h4>
+                        <ul class="recommendation-list">
+                            <li class="recommendation-item">
+                                <i class="fas fa-seedling recommendation-icon"></i>
+                                <div>
+                                    <strong>Recommended Crops:</strong>
+                                    <ul>
+                                        <li>Wheat</li>
+                                        <li>Chickpea</li>
+                                        <li>Safflower</li>
+                                        <li>Linseed</li>
+                                        <li>Winter Vegetables</li>
+                                    </ul>
+                                </div>
+                            </li>
+                            <li class="recommendation-item">
+                                <i class="fas fa-list recommendation-icon"></i>
+                                <div>
+                                    <strong>Management Tips:</strong>
+                                    <ul>
+                                        <li>Moisture conservation</li>
+                                        <li>Soil amendments</li>
+                                        <li>Cover cropping</li>
+                                        <li>Nutrient management</li>
+                                    </ul>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="row mt-4">
+                    <div class="col-md-6">
+                        <h4>Red Soil</h4>
+                        <ul class="recommendation-list">
+                            <li class="recommendation-item">
+                                <i class="fas fa-seedling recommendation-icon"></i>
+                                <div>
+                                    <strong>Recommended Crops:</strong>
+                                    <ul>
+                                        <li>Horse Gram</li>
+                                        <li>Black Gram</li>
+                                        <li>Mustard</li>
+                                        <li>Winter Vegetables</li>
+                                        <li>Fodder Crops</li>
+                                    </ul>
+                                </div>
+                            </li>
+                            <li class="recommendation-item">
+                                <i class="fas fa-list recommendation-icon"></i>
+                                <div>
+                                    <strong>Management Tips:</strong>
+                                    <ul>
+                                        <li>Soil conservation</li>
+                                        <li>Water harvesting</li>
+                                        <li>Organic mulching</li>
+                                        <li>Erosion control</li>
+                                    </ul>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h4>Clay Soil</h4>
+                        <ul class="recommendation-list">
+                            <li class="recommendation-item">
+                                <i class="fas fa-seedling recommendation-icon"></i>
+                                <div>
+                                    <strong>Recommended Crops:</strong>
+                                    <ul>
+                                        <li>Wheat</li>
+                                        <li>Barley</li>
+                                        <li>Mustard</li>
+                                        <li>Winter Vegetables</li>
+                                        <li>Fodder Crops</li>
+                                    </ul>
+                                </div>
+                            </li>
+                            <li class="recommendation-item">
+                                <i class="fas fa-list recommendation-icon"></i>
+                                <div>
+                                    <strong>Management Tips:</strong>
+                                    <ul>
+                                        <li>Drainage improvement</li>
+                                        <li>Deep ploughing</li>
+                                        <li>Organic matter</li>
+                                        <li>Winter preparation</li>
+                                    </ul>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Winter Recommendations -->
+            <div id="winter" class="soil-type-card">
+                <div class="soil-type-header">
+                    <i class="fas fa-snowflake soil-icon season-winter"></i>
+                    <h3>Winter Recommendations</h3>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <h4>Alluvial Soil</h4>
+                        <ul class="recommendation-list">
+                            <li class="recommendation-item">
+                                <i class="fas fa-seedling recommendation-icon"></i>
+                                <div>
+                                    <strong>Recommended Crops:</strong>
+                                    <ul>
+                                        <li>Wheat</li>
+                                        <li>Barley</li>
+                                        <li>Winter Vegetables</li>
+                                        <li>Pulses</li>
+                                        <li>Oilseeds</li>
+                                    </ul>
+                                </div>
+                            </li>
+                            <li class="recommendation-item">
+                                <i class="fas fa-list recommendation-icon"></i>
+                                <div>
+                                    <strong>Management Tips:</strong>
+                                    <ul>
+                                        <li>Frost protection</li>
+                                        <li>Irrigation scheduling</li>
+                                        <li>Nutrient management</li>
+                                        <li>Soil temperature</li>
+                                    </ul>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h4>Black Soil</h4>
+                        <ul class="recommendation-list">
+                            <li class="recommendation-item">
+                                <i class="fas fa-seedling recommendation-icon"></i>
+                                <div>
+                                    <strong>Recommended Crops:</strong>
+                                    <ul>
+                                        <li>Wheat</li>
+                                        <li>Chickpea</li>
+                                        <li>Safflower</li>
+                                        <li>Winter Vegetables</li>
+                                        <li>Medicinal Plants</li>
+                                    </ul>
+                                </div>
+                            </li>
+                            <li class="recommendation-item">
+                                <i class="fas fa-list recommendation-icon"></i>
+                                <div>
+                                    <strong>Management Tips:</strong>
+                                    <ul>
+                                        <li>Moisture retention</li>
+                                        <li>Temperature management</li>
+                                        <li>Soil amendments</li>
+                                        <li>Frost protection</li>
+                                    </ul>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="row mt-4">
+                    <div class="col-md-6">
+                        <h4>Red Soil</h4>
+                        <ul class="recommendation-list">
+                            <li class="recommendation-item">
+                                <i class="fas fa-seedling recommendation-icon"></i>
+                                <div>
+                                    <strong>Recommended Crops:</strong>
+                                    <ul>
+                                        <li>Millets</li>
+                                        <li>Pulses</li>
+                                        <li>Oilseeds</li>
+                                        <li>Winter Vegetables</li>
+                                        <li>Fodder Crops</li>
+                                    </ul>
+                                </div>
+                            </li>
+                            <li class="recommendation-item">
+                                <i class="fas fa-list recommendation-icon"></i>
+                                <div>
+                                    <strong>Management Tips:</strong>
+                                    <ul>
+                                        <li>Soil protection</li>
+                                        <li>Mulching</li>
+                                        <li>Water conservation</li>
+                                        <li>Temperature control</li>
+                                    </ul>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h4>Clay Soil</h4>
+                        <ul class="recommendation-list">
+                            <li class="recommendation-item">
+                                <i class="fas fa-seedling recommendation-icon"></i>
+                                <div>
+                                    <strong>Recommended Crops:</strong>
+                                    <ul>
+                                        <li>Wheat</li>
+                                        <li>Barley</li>
+                                        <li>Winter Vegetables</li>
+                                        <li>Pulses</li>
+                                        <li>Oilseeds</li>
+                                    </ul>
+                                </div>
+                            </li>
+                            <li class="recommendation-item">
+                                <i class="fas fa-list recommendation-icon"></i>
+                                <div>
+                                    <strong>Management Tips:</strong>
+                                    <ul>
+                                        <li>Drainage maintenance</li>
+                                        <li>Frost protection</li>
+                                        <li>Soil structure</li>
+                                        <li>Temperature control</li>
+                                    </ul>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const seasonSelect = document.getElementById('seasonSelect');
+    const seasonIcon = document.getElementById('seasonIcon');
+    const allCards = document.querySelectorAll('.soil-type-card');
+
+    const seasonIcons = {
+        'spring': '<i class="fas fa-seedling season-spring"></i>',
+        'summer': '<i class="fas fa-sun season-summer"></i>',
+        'autumn': '<i class="fas fa-leaf season-autumn"></i>',
+        'winter': '<i class="fas fa-snowflake season-winter"></i>'
+    };
+
+    seasonSelect.addEventListener('change', function() {
+        // Hide all cards
+        allCards.forEach(card => {
+            card.classList.remove('active');
+        });
+
+        const selectedSeason = this.value;
+        if (selectedSeason) {
+            // Show selected season's card
+            const selectedCard = document.getElementById(selectedSeason);
+            if (selectedCard) {
+                selectedCard.classList.add('active');
+            }
+
+            // Update season icon
+            seasonIcon.innerHTML = seasonIcons[selectedSeason] || '';
+        }
+    });
+});
+</script>
+{% endblock %} 

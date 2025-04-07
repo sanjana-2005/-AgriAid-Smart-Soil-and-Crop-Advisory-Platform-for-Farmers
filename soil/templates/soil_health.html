@@ -1,0 +1,355 @@
+{% extends "base.html" %}
+
+{% block title %}Soil Health Analysis{% endblock %}
+
+{% block extra_css %}
+<style>
+    .upload-container {
+        background: linear-gradient(135deg, #f5f7fa 0%, #e4e8eb 100%);
+        border-radius: 15px;
+        padding: 2rem;
+        margin: 2rem auto;
+        max-width: 800px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .upload-area {
+        border: 2px dashed #4a90e2;
+        border-radius: 10px;
+        padding: 2rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .upload-area:hover {
+        border-color: #357abd;
+        background-color: rgba(74, 144, 226, 0.1);
+    }
+
+    .upload-icon {
+        font-size: 3rem;
+        color: #4a90e2;
+        margin-bottom: 1rem;
+    }
+
+    #preview-image {
+        max-width: 300px;
+        border-radius: 8px;
+        margin: 1rem auto;
+        display: none;
+    }
+
+    .result-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin: 1rem 0;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        display: none;
+    }
+
+    .health-status {
+        font-size: 1.5rem;
+        font-weight: bold;
+        margin: 1rem 0;
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        text-align: center;
+    }
+
+    .status-poor { background-color: #ffebee; color: #c62828; }
+    .status-fair { background-color: #fff3e0; color: #ef6c00; }
+    .status-good { background-color: #e8f5e9; color: #2e7d32; }
+    .status-excellent { background-color: #e3f2fd; color: #1565c0; }
+
+    .recommendations {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-top: 1rem;
+    }
+
+    .recommendations h4 {
+        color: #2196f3;
+        margin-bottom: 0.5rem;
+    }
+
+    .recommendations ul {
+        list-style-type: none;
+        padding-left: 0;
+    }
+
+    .recommendations li {
+        padding: 0.5rem 0;
+        border-bottom: 1px solid #e0e0e0;
+    }
+
+    .recommendations li:last-child {
+        border-bottom: none;
+    }
+
+    .ph-meter {
+        width: 200px;
+        height: 200px;
+        margin: 1rem auto;
+        position: relative;
+    }
+
+    .ph-value {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 2rem;
+        font-weight: bold;
+    }
+
+    .crop-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+
+    .crop-item {
+        background: #f8f9fa;
+        padding: 0.8rem;
+        border-radius: 8px;
+        text-align: center;
+        transition: transform 0.2s;
+    }
+
+    .crop-item:hover {
+        transform: translateY(-2px);
+    }
+
+    #loading-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(255, 255, 255, 0.9);
+        z-index: 1000;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .spinner {
+        width: 50px;
+        height: 50px;
+        border: 5px solid #f3f3f3;
+        border-top: 5px solid #3498db;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <h1 class="text-center mb-4">Soil Health Analysis</h1>
+    
+    <div class="upload-container">
+        <form id="upload-form" enctype="multipart/form-data">
+            <div class="upload-area" id="drop-zone">
+                <i class="fas fa-cloud-upload-alt upload-icon"></i>
+                <h3>Drop your soil image here</h3>
+                <p>or click to select a file</p>
+                <input type="file" id="file-input" accept="image/*" style="display: none;">
+            </div>
+            <img id="preview-image" class="img-fluid" alt="Preview">
+        </form>
+    </div>
+
+    <div id="result-section" class="result-card">
+        <h2 class="text-center mb-4">Soil Health Report</h2>
+        
+        <div class="row">
+            <div class="col-md-6">
+                <div class="ph-meter">
+                    <canvas id="ph-gauge"></canvas>
+                    <div class="ph-value" id="ph-value"></div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="health-status" id="health-status"></div>
+                <p id="health-description" class="lead"></p>
+            </div>
+        </div>
+
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <div class="recommendations">
+                    <h4><i class="fas fa-seedling"></i> Suitable Crops</h4>
+                    <div class="crop-grid" id="crop-recommendations"></div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="recommendations">
+                    <h4><i class="fas fa-list-ul"></i> Improvement Recommendations</h4>
+                    <ul id="improvement-recommendations"></ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="loading-overlay">
+        <div class="spinner"></div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    let phGauge = null;
+
+    function initializePhGauge() {
+        const ctx = document.getElementById('ph-gauge').getContext('2d');
+        phGauge = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                datasets: [{
+                    data: [1],
+                    backgroundColor: ['#2196f3'],
+                    circumference: 180,
+                    rotation: 270,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '80%',
+                plugins: {
+                    tooltip: { enabled: false },
+                    legend: { display: false }
+                }
+            }
+        });
+    }
+
+    function updatePhGauge(ph) {
+        const normalizedPh = (ph - 0) / (14 - 0);
+        const hue = normalizedPh * 120;
+        const color = `hsl(${hue}, 70%, 50%)`;
+        
+        phGauge.data.datasets[0].backgroundColor = [color];
+        phGauge.data.datasets[0].data = [normalizedPh * 180];
+        phGauge.update();
+    }
+
+    function showResults(data) {
+        document.getElementById('result-section').style.display = 'block';
+        document.getElementById('ph-value').textContent = `pH ${data.soil_ph}`;
+        
+        const statusElement = document.getElementById('health-status');
+        statusElement.textContent = data.health_status;
+        statusElement.className = 'health-status status-' + data.health_status.toLowerCase();
+        
+        document.getElementById('health-description').textContent = data.health_description;
+        
+        const cropGrid = document.getElementById('crop-recommendations');
+        cropGrid.innerHTML = data.suitable_crops.map(crop => `
+            <div class="crop-item">
+                <i class="fas fa-leaf mb-2"></i>
+                <div>${crop}</div>
+            </div>
+        `).join('');
+        
+        const recommendationsList = document.getElementById('improvement-recommendations');
+        recommendationsList.innerHTML = data.improvement_recommendations.map(rec => `
+            <li><i class="fas fa-check-circle text-success"></i> ${rec}</li>
+        `).join('');
+        
+        updatePhGauge(data.soil_ph);
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        initializePhGauge();
+        
+        const dropZone = document.getElementById('drop-zone');
+        const fileInput = document.getElementById('file-input');
+        const previewImage = document.getElementById('preview-image');
+        const loadingOverlay = document.getElementById('loading-overlay');
+
+        dropZone.addEventListener('click', () => fileInput.click());
+
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.style.borderColor = '#2196f3';
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.style.borderColor = '#4a90e2';
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.style.borderColor = '#4a90e2';
+            handleFile(e.dataTransfer.files[0]);
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            handleFile(e.target.files[0]);
+        });
+
+        function handleFile(file) {
+            if (file && file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    previewImage.src = e.target.result;
+                    previewImage.style.display = 'block';
+                    
+                    // Create a temporary image to get RGB values
+                    const img = new Image();
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        canvas.width = img.width;
+                        canvas.height = img.height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0);
+                        
+                        // Get RGB values from the center of the image
+                        const x = Math.floor(img.width / 2);
+                        const y = Math.floor(img.height / 2);
+                        const pixel = ctx.getImageData(x, y, 1, 1).data;
+                        
+                        analyzeSoilHealth([pixel[0], pixel[1], pixel[2]]);
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        async function analyzeSoilHealth(rgb_values) {
+            loadingOverlay.style.display = 'flex';
+            try {
+                const response = await fetch('/analyze_soil_health', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ rgb_values: rgb_values })
+                });
+                
+                const data = await response.json();
+                showResults(data);
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error analyzing soil health. Please try again.');
+            } finally {
+                loadingOverlay.style.display = 'none';
+            }
+        }
+    });
+</script>
+{% endblock %} 

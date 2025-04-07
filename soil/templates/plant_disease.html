@@ -1,0 +1,359 @@
+{% extends "base.html" %}
+
+{% block title %}Plant Disease Detection - AgriSmart{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Hide all spinners and loading indicators */
+    .spinner-border,
+    .spinner-grow,
+    .loading-spinner,
+    [class*="spinner"],
+    .spinner {
+        display: none !important;
+    }
+
+    /* Override any loading backgrounds */
+    .loading,
+    .is-loading,
+    [class*="loading"] {
+        background: none !important;
+    }
+
+    .upload-section {
+        background: white;
+        border-radius: 20px;
+        padding: 2rem;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        margin-bottom: 2rem;
+    }
+
+    .upload-area {
+        border: 2px dashed var(--primary-color);
+        border-radius: 15px;
+        padding: 2rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        background: var(--light-bg);
+    }
+
+    .upload-area:hover {
+        background: #f8f9fa;
+        border-color: var(--secondary-color);
+    }
+
+    .upload-icon {
+        font-size: 3rem;
+        color: var(--primary-color);
+        margin-bottom: 1rem;
+    }
+
+    #imagePreview {
+        max-width: 100%;
+        max-height: 300px;
+        border-radius: 10px;
+        display: none;
+        margin: 1rem auto;
+    }
+
+    .result-section {
+        display: none;
+        margin-top: 2rem;
+    }
+
+    .result-section.visible {
+        display: block;
+    }
+
+    .result-card {
+        background: white;
+        border-radius: 15px;
+        padding: 1.5rem;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        border: 1px solid #eee;
+    }
+
+    .disease-icon {
+        font-size: 2.5rem;
+        color: var(--primary-color);
+        margin-bottom: 1rem;
+    }
+
+    .disease-info {
+        margin-top: 1rem;
+        padding: 1rem;
+        border-radius: 10px;
+        background: var(--light-bg);
+    }
+
+    .treatment-steps {
+        list-style-type: none;
+        padding: 0;
+        margin-top: 1rem;
+    }
+
+    .treatment-steps li {
+        padding: 0.5rem 0;
+        display: flex;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+
+    .treatment-steps li i {
+        color: var(--primary-color);
+        margin-top: 0.3rem;
+    }
+
+    .error-message {
+        display: none;
+        color: #dc3545;
+        margin-top: 1rem;
+        padding: 1rem;
+        border-radius: 10px;
+        background: #fff5f5;
+        border: 1px solid #dc3545;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <h1 class="text-center mb-4">Plant Disease Detection</h1>
+    <p class="text-center text-muted mb-5">Upload a clear image of your plant's leaves for instant disease detection and treatment recommendations.</p>
+
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="upload-section">
+                <form id="uploadForm" enctype="multipart/form-data">
+                    <div class="upload-area" onclick="document.getElementById('imageInput').click()">
+                        <i class="fas fa-cloud-upload-alt upload-icon"></i>
+                        <h4>Drop your image here</h4>
+                        <p class="text-muted">or click to browse</p>
+                        <input type="file" id="imageInput" name="file" accept="image/*" style="display: none;">
+                    </div>
+                    <img id="imagePreview" class="img-fluid">
+                    <div class="text-center mt-3">
+                        <button type="submit" class="btn btn-primary btn-lg" id="analyzeBtn" style="display: none;">
+                            <i class="fas fa-search me-2"></i>Analyze Image
+                        </button>
+                    </div>
+                </form>
+
+                <div class="error-message">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    <span id="errorText"></span>
+                </div>
+            </div>
+
+            <div class="result-section">
+                <div class="result-card">
+                    <div class="text-center">
+                        <i class="fas fa-leaf disease-icon"></i>
+                        <h3 class="mb-3">Detection Results</h3>
+                        <div class="disease-info">
+                            <h4 id="diseaseName" class="mb-3"></h4>
+                            <p id="diseaseDescription" class="text-muted"></p>
+                        </div>
+                        <div class="mt-4">
+                            <h5>Recommended Treatment</h5>
+                            <ul class="treatment-steps" id="treatmentSteps">
+                            </ul>
+                        </div>
+                        <button type="button" class="btn btn-primary mt-3" onclick="location.href='/plant-disease'">
+                            <i class="fas fa-redo me-2"></i>Analyze Another Image
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Add this at the start of your JavaScript
+    // Remove any existing spinners
+    document.addEventListener('DOMContentLoaded', function() {
+        const spinners = document.querySelectorAll('.spinner-border, .spinner-grow, .loading-spinner, [class*="spinner"]');
+        spinners.forEach(spinner => spinner.remove());
+    });
+
+    const uploadForm = document.getElementById('uploadForm');
+    const imageInput = document.getElementById('imageInput');
+    const imagePreview = document.getElementById('imagePreview');
+    const analyzeBtn = document.getElementById('analyzeBtn');
+    const resultSection = document.querySelector('.result-section');
+    const errorMessage = document.querySelector('.error-message');
+    const diseaseName = document.getElementById('diseaseName');
+    const diseaseDescription = document.getElementById('diseaseDescription');
+    const treatmentSteps = document.getElementById('treatmentSteps');
+
+    // Disease information database
+    const diseaseInfo = {
+        'curl': {
+            name: 'Leaf Curl Disease',
+            description: 'A viral disease that causes leaves to curl and become distorted, affecting plant growth and yield.',
+            treatments: [
+                'Remove and destroy infected plants to prevent spread',
+                'Use disease-resistant varieties when planting',
+                'Apply appropriate fungicides as recommended',
+                'Maintain proper plant spacing for good air circulation'
+            ]
+        },
+        'healthy': {
+            name: 'Healthy Plant',
+            description: 'Your plant appears to be healthy with no visible signs of disease.',
+            treatments: [
+                'Continue regular maintenance and care',
+                'Monitor plant health regularly',
+                'Maintain proper watering schedule',
+                'Ensure adequate nutrition through fertilization'
+            ]
+        },
+        'slug': {
+            name: 'Slug Damage',
+            description: 'Physical damage caused by slugs feeding on plant leaves, typically showing irregular holes and trails.',
+            treatments: [
+                'Apply slug pellets or organic slug deterrents',
+                'Create barriers around plants using copper tape',
+                'Remove hiding places like debris and thick mulch',
+                'Water in the morning to reduce slug activity'
+            ]
+        },
+        'spot': {
+            name: 'Leaf Spot Disease',
+            description: 'A fungal disease causing spots on leaves, which can lead to defoliation and reduced plant vigor.',
+            treatments: [
+                'Remove infected leaves and destroy them',
+                'Improve air circulation around plants',
+                'Apply appropriate fungicide treatment',
+                'Avoid overhead watering to reduce moisture on leaves'
+            ]
+        }
+    };
+
+    // Handle file input change
+    imageInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                imagePreview.src = e.target.result;
+                imagePreview.style.display = 'block';
+                analyzeBtn.style.display = 'inline-block';
+            }
+            reader.readAsDataURL(file);
+        }
+    });
+
+    // Handle form submission
+    uploadForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(this);
+        if (!formData.get('file').name) {
+            showError('Please select an image first.');
+            return;
+        }
+
+        // Hide previous results and errors
+        resultSection.style.display = 'none';
+        resultSection.classList.remove('visible');
+        errorMessage.style.display = 'none';
+        analyzeBtn.style.display = 'none';
+
+        try {
+            const response = await fetch('/predict', {
+                method: 'POST',
+                body: formData
+            });
+
+            const data = await response.json();
+
+            if (data.error) {
+                showError(data.error);
+                return;
+            }
+
+            // Display results
+            const disease = data.prediction;
+            const info = diseaseInfo[disease];
+
+            diseaseName.textContent = info.name;
+            diseaseDescription.textContent = info.description;
+            
+            // Clear and populate treatment steps
+            treatmentSteps.innerHTML = info.treatments.map(step => `
+                <li>
+                    <i class="fas fa-check-circle"></i>
+                    <span>${step}</span>
+                </li>
+            `).join('');
+
+            // Show results
+            resultSection.style.display = 'block';
+            resultSection.classList.add('visible');
+
+        } catch (error) {
+            showError('An error occurred while analyzing the image. Please try again.');
+        }
+    });
+
+    // Show error message
+    function showError(message) {
+        errorMessage.style.display = 'block';
+        document.getElementById('errorText').textContent = message;
+        analyzeBtn.style.display = 'inline-block';
+        resultSection.style.display = 'none';
+        resultSection.classList.remove('visible');
+    }
+
+    // Handle drag and drop
+    const uploadArea = document.querySelector('.upload-area');
+
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        uploadArea.addEventListener(eventName, preventDefaults, false);
+    });
+
+    function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+
+    ['dragenter', 'dragover'].forEach(eventName => {
+        uploadArea.addEventListener(eventName, highlight, false);
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+        uploadArea.addEventListener(eventName, unhighlight, false);
+    });
+
+    function highlight(e) {
+        uploadArea.classList.add('bg-light');
+    }
+
+    function unhighlight(e) {
+        uploadArea.classList.remove('bg-light');
+    }
+
+    uploadArea.addEventListener('drop', handleDrop, false);
+
+    function handleDrop(e) {
+        const dt = e.dataTransfer;
+        const file = dt.files[0];
+        imageInput.files = dt.files;
+        
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                imagePreview.src = e.target.result;
+                imagePreview.style.display = 'block';
+                analyzeBtn.style.display = 'inline-block';
+            }
+            reader.readAsDataURL(file);
+        }
+    }
+</script>
+{% endblock %} 

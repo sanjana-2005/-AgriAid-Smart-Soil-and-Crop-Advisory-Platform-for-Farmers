@@ -1,0 +1,935 @@
+{% extends "base.html" %}
+
+{% block title %}Soil Explorer - Interactive Soil Analysis Tools{% endblock %}
+
+{% block extra_css %}
+<style>
+    .explorer-container {
+        padding: 2rem 0;
+    }
+
+    .composition-calculator {
+        background: white;
+        padding: 2rem;
+        border-radius: 15px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+
+    .texture-triangle {
+        width: 100%;
+        height: 500px;
+        position: relative;
+        background: #ffffff;
+        padding: 20px;
+        border: 2px solid #e0e0e0;
+        border-radius: 15px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        margin-bottom: 2rem;
+    }
+
+    .triangle-svg {
+        width: 100%;
+        height: 100%;
+    }
+
+    .texture-point {
+        width: 12px;
+        height: 12px;
+        background: red;
+        border: 2px solid white;
+        border-radius: 50%;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        cursor: move;
+        z-index: 2;
+        box-shadow: 0 0 10px rgba(0,0,0,0.3);
+    }
+
+    .texture-labels {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 1;
+    }
+
+    .texture-label {
+        background: rgba(255, 255, 255, 0.9);
+        padding: 5px 10px;
+        border-radius: 4px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .sand-label { bottom: 10px; right: 10px; }
+    .clay-label { bottom: 10px; left: 10px; }
+    .silt-label { top: 10px; left: 50%; transform: translateX(-50%); }
+
+    .result-card {
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .result-card h4 {
+        color: #2c3e50;
+        margin-bottom: 15px;
+    }
+
+    .result-card p {
+        margin-bottom: 10px;
+        color: #34495e;
+    }
+
+    .result-card span {
+        font-weight: 500;
+    }
+
+    .slider-container {
+        margin: 1rem 0;
+    }
+
+    .soil-property-slider {
+        width: 100%;
+    }
+
+    .soil-type {
+        font-size: 1.2rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        color: var(--primary-color);
+    }
+
+    .characteristics, .recommendations {
+        margin-top: 1rem;
+    }
+
+    /* pH Analyzer Styles */
+    .ph-scale-container {
+        background: white;
+        padding: 2rem;
+        border-radius: 15px;
+        box-shadow: var(--card-shadow);
+    }
+
+    .ph-scale {
+        height: 60px;
+        background: linear-gradient(to right, 
+            #ff4444 0%, /* Very Acidic */
+            #ff8800 20%, /* Acidic */
+            #ffeb3b 40%, /* Slightly Acidic */
+            #4CAF50 50%, /* Neutral */
+            #2196F3 70%, /* Slightly Alkaline */
+            #3f51b5 85%, /* Alkaline */
+            #9c27b0 100% /* Very Alkaline */
+        );
+        border-radius: 30px;
+        position: relative;
+        margin: 2rem 0;
+    }
+
+    .ph-indicator {
+        width: 24px;
+        height: 40px;
+        background: white;
+        position: absolute;
+        top: 10px;
+        border-radius: 12px;
+        cursor: move;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        transition: left 0.3s ease;
+    }
+
+    .ph-value {
+        position: absolute;
+        top: -30px;
+        transform: translateX(-50%);
+        background: white;
+        padding: 5px 15px;
+        border-radius: 20px;
+        box-shadow: var(--card-shadow);
+        font-weight: bold;
+    }
+
+    .ph-markers {
+        position: absolute;
+        width: 100%;
+        bottom: -25px;
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .ph-mark {
+        font-size: 0.8rem;
+        color: #666;
+        transform: translateX(-50%);
+    }
+
+    .nutrient-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+
+    .nutrient-item {
+        padding: 0.5rem;
+        border-radius: 8px;
+        text-align: center;
+        font-size: 0.9rem;
+        transition: all 0.3s ease;
+    }
+
+    .nutrient-high {
+        background: #e8f5e9;
+        color: #2e7d32;
+        border: 1px solid #a5d6a7;
+    }
+
+    .nutrient-medium {
+        background: #fff3e0;
+        color: #f57c00;
+        border: 1px solid #ffcc80;
+    }
+
+    .nutrient-low {
+        background: #ffebee;
+        color: #c62828;
+        border: 1px solid #ef9a9a;
+    }
+
+    .crop-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-top: 1rem;
+    }
+
+    .crop-tag {
+        background: var(--light-bg);
+        color: var(--text-color);
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        transition: all 0.3s ease;
+    }
+
+    .crop-tag:hover {
+        background: var(--primary-color);
+        color: white;
+        transform: translateY(-2px);
+    }
+
+    /* Update layer info animation */
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(-50%) translateX(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(-50%) translateX(0);
+        }
+    }
+
+    .layer-info.visible {
+        animation: fadeIn 0.3s ease forwards;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container explorer-container">
+    <h1 class="text-center mb-5">Interactive Soil Explorer</h1>
+
+    <ul class="nav nav-tabs mb-4" id="explorerTabs" role="tablist">
+        <li class="nav-item">
+            <a class="nav-link active" id="calculator-tab" data-bs-toggle="tab" href="#calculator" role="tab">Composition Calculator</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="texture-tab" data-bs-toggle="tab" href="#texture" role="tab">Texture Triangle</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="ph-tab" data-bs-toggle="tab" href="#ph" role="tab">pH Analyzer</a>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="explorerTabContent">
+        <!-- Composition Calculator -->
+        <div class="tab-pane fade show active" id="calculator" role="tabpanel">
+            <div class="calculator-section">
+                <h2 class="mb-4">Soil Composition Calculator</h2>
+                
+                <div class="slider-container">
+                    <div class="slider-group mb-4">
+                        <label class="d-block mb-2">Sand Percentage: <span id="sandValue" class="fw-bold">33</span>%</label>
+                        <input type="range" id="sandSlider" class="form-range" min="0" max="100" value="33">
+                        <small class="text-muted">Affects drainage and aeration</small>
+                    </div>
+                    
+                    <div class="slider-group mb-4">
+                        <label class="d-block mb-2">Silt Percentage: <span id="siltValue" class="fw-bold">33</span>%</label>
+                        <input type="range" id="siltSlider" class="form-range" min="0" max="100" value="33">
+                        <small class="text-muted">Affects water retention and fertility</small>
+                    </div>
+                    
+                    <div class="slider-group mb-4">
+                        <label class="d-block mb-2">Clay Percentage: <span id="clayValue" class="fw-bold">34</span>%</label>
+                        <input type="range" id="claySlider" class="form-range" min="0" max="100" value="34">
+                        <small class="text-muted">Affects nutrient retention and structure</small>
+                    </div>
+
+                    <div class="alert alert-info" id="totalAlert">
+                        Total: <span id="totalValue">100</span>%
+                    </div>
+                </div>
+
+                <div class="result-card">
+                    <h3 class="mb-4">Soil Analysis</h3>
+                    <div class="soil-type mb-4">
+                        <h4>Soil Type:</h4>
+                        <p id="soilTypeResult" class="fs-5 text-primary">Loam</p>
+                    </div>
+                    <div class="characteristics mb-4">
+                        <h4>Characteristics:</h4>
+                        <ul id="soilCharacteristics" class="list-unstyled">
+                            <li class="mb-2"><i class="fas fa-tint"></i> Water Retention: <span id="waterRetention">Moderate</span></li>
+                            <li class="mb-2"><i class="fas fa-wind"></i> Drainage: <span id="drainage">Good</span></li>
+                            <li class="mb-2"><i class="fas fa-leaf"></i> Nutrient Retention: <span id="nutrientRetention">High</span></li>
+                            <li class="mb-2"><i class="fas fa-seedling"></i> Root Growth: <span id="rootGrowth">Excellent</span></li>
+                        </ul>
+                    </div>
+                    <div class="recommendations">
+                        <h4>Recommended Crops:</h4>
+                        <div id="cropRecommendations" class="crop-tags"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Texture Triangle -->
+        <div class="tab-pane fade" id="texture" role="tabpanel">
+            <div class="texture-triangle">
+                <svg viewBox="0 0 400 400" class="triangle-svg">
+                    <!-- Triangle background -->
+                    <path d="M200,50 L50,350 L350,350 Z" fill="#f8f9fa" stroke="#333" stroke-width="2"/>
+                    
+                    <!-- Grid lines for better region separation -->
+                    <g stroke="#ddd" stroke-width="1">
+                        <!-- Horizontal lines -->
+                        <line x1="50" y1="350" x2="350" y2="350"/>
+                        <line x1="125" y1="275" x2="275" y2="275"/>
+                        <line x1="162.5" y1="200" x2="237.5" y2="200"/>
+                        <line x1="175" y1="150" x2="225" y2="150"/>
+                        <!-- Diagonal lines -->
+                        <line x1="125" y1="275" x2="200" y2="50"/>
+                        <line x1="275" y1="275" x2="200" y2="50"/>
+                    </g>
+                    
+                    <!-- Main Labels -->
+                    <g font-size="16" font-weight="bold" fill="#333">
+                        <text x="200" y="40" text-anchor="middle">Clay (100%)</text>
+                        <text x="30" y="350" text-anchor="end">Sand (100%)</text>
+                        <text x="370" y="350" text-anchor="start">Silt (100%)</text>
+                    </g>
+                    
+                    <!-- Soil type regions -->
+                    <g font-size="12" fill="#666" text-anchor="middle">
+                        <!-- Top section -->
+                        <text x="200" y="100">Clay</text>
+                        
+                        <!-- Upper middle section -->
+                        <text x="160" y="150">Silty Clay</text>
+                        <text x="240" y="150">Sandy Clay</text>
+                        
+                        <!-- Middle section -->
+                        <text x="200" y="200">Clay Loam</text>
+                        <text x="140" y="180">Silty Clay Loam</text>
+                        <text x="260" y="180">Sandy Clay Loam</text>
+                        
+                        <!-- Lower middle section -->
+                        <text x="200" y="250">Loam</text>
+                        <text x="120" y="240">Silt Loam</text>
+                        <text x="280" y="240">Sandy Loam</text>
+                        
+                        <!-- Bottom section -->
+                        <text x="100" y="320">Silt</text>
+                        <text x="200" y="320">Loamy Sand</text>
+                        <text x="300" y="320">Sand</text>
+                    </g>
+
+                    <!-- Percentage guides -->
+                    <g font-size="10" fill="#999">
+                        <text x="170" y="175">40%</text>
+                        <text x="230" y="175">40%</text>
+                        <text x="170" y="250">20%</text>
+                        <text x="230" y="250">20%</text>
+                    </g>
+                </svg>
+                <div class="texture-point" id="texturePoint"></div>
+            </div>
+            <div class="result-card">
+                <h4>Selected Composition</h4>
+                <p>Sand: <span id="sandPercent">0</span>%</p>
+                <p>Silt: <span id="siltPercent">0</span>%</p>
+                <p>Clay: <span id="clayPercent">0</span>%</p>
+                <p>Soil Type: <span id="soilType">Loam</span></p>
+            </div>
+        </div>
+
+        <!-- pH Analyzer -->
+        <div class="tab-pane fade" id="ph" role="tabpanel">
+            <h2 class="mb-4">Soil pH Analyzer</h2>
+            
+            <div class="ph-container">
+                <div class="ph-scale-container mb-4">
+                    <div class="ph-labels d-flex justify-content-between mb-2">
+                        <span>Acidic</span>
+                        <span>Neutral</span>
+                        <span>Alkaline</span>
+                    </div>
+                    <div class="ph-scale">
+                        <div class="ph-indicator" id="phIndicator"></div>
+                        <div class="ph-value" id="phValue">7.0</div>
+                        <div class="ph-markers">
+                            <span class="ph-mark" style="left: 0%">4.0</span>
+                            <span class="ph-mark" style="left: 25%">5.5</span>
+                            <span class="ph-mark" style="left: 50%">7.0</span>
+                            <span class="ph-mark" style="left: 75%">8.5</span>
+                            <span class="ph-mark" style="left: 100%">10.0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="result-card">
+                    <h4>pH Analysis</h4>
+                    <div class="ph-details">
+                        <p>Current pH: <span id="currentPh" class="fw-bold">7.0</span></p>
+                        <p>Soil Condition: <span id="phCondition" class="fw-bold">Neutral</span></p>
+                    </div>
+                    
+                    <div class="nutrient-availability mt-4">
+                        <h5>Nutrient Availability at Current pH:</h5>
+                        <div class="nutrient-grid" id="nutrientGrid">
+                            <!-- Nutrients will be populated by JavaScript -->
+                        </div>
+                    </div>
+                    
+                    <div class="ph-recommendations mt-4">
+                        <h5>Recommendations:</h5>
+                        <ul id="phRecommendations" class="list-unstyled">
+                            <!-- Recommendations will be populated by JavaScript -->
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize variables for soil composition calculator
+        const sandSlider = document.getElementById('sandSlider');
+        const siltSlider = document.getElementById('siltSlider');
+        const claySlider = document.getElementById('claySlider');
+        const sandValue = document.getElementById('sandValue');
+        const siltValue = document.getElementById('siltValue');
+        const clayValue = document.getElementById('clayValue');
+        const totalValue = document.getElementById('totalValue');
+        const totalAlert = document.getElementById('totalAlert');
+        const soilTypeResult = document.getElementById('soilTypeResult');
+        const soilCharacteristics = document.getElementById('soilCharacteristics');
+        const cropRecommendations = document.getElementById('cropRecommendations');
+
+        // Soil type definitions
+        const soilTypes = {
+            'Sand': {
+                characteristics: 'Very light and gritty texture, poor water retention, excellent drainage.',
+                crops: 'Carrots, Potatoes, Radishes, Asparagus, Watermelons'
+            },
+            'Loamy Sand': {
+                characteristics: 'Light texture with slightly better water retention than sand.',
+                crops: 'Root vegetables, Strawberries, Tomatoes, Peppers, Beans'
+            },
+            'Sandy Loam': {
+                characteristics: 'Light to medium texture, moderate water retention.',
+                crops: 'Most vegetables, Fruit trees, Berries, Corn, Squash'
+            },
+            'Loam': {
+                characteristics: 'Perfect balance of sand, silt, and clay.',
+                crops: 'All types of crops, especially vegetables, grains, and fruit trees'
+            },
+            'Silt Loam': {
+                characteristics: 'Smooth and powdery when dry, retains moisture well.',
+                crops: 'Most vegetables, Wheat, Oats, Corn, Soybeans'
+            },
+            'Silt': {
+                characteristics: 'Smooth and powdery, excellent water retention.',
+                crops: 'Grass crops, Wheat, Corn, Soybeans, Rice'
+            },
+            'Clay Loam': {
+                characteristics: 'Heavy texture, high water retention, slow drainage.',
+                crops: 'Rice, Wheat, Pulses, Oilseeds'
+            },
+            'Sandy Clay Loam': {
+                characteristics: 'Moderate texture, good balance of drainage.',
+                crops: 'Cotton, Sorghum, Corn, Sunflowers'
+            },
+            'Silty Clay Loam': {
+                characteristics: 'Smooth when wet, moderate to high water retention.',
+                crops: 'Rice, Wheat, Vegetables, Legumes'
+            },
+            'Sandy Clay': {
+                characteristics: 'Heavy texture with some grittiness.',
+                crops: 'Cotton, Sorghum, Rice, Sugarcane'
+            },
+            'Silty Clay': {
+                characteristics: 'Heavy and smooth texture, very high water retention.',
+                crops: 'Rice, Wetland crops, Water-tolerant vegetables'
+            },
+            'Clay': {
+                characteristics: 'Very heavy texture, very high water retention.',
+                crops: 'Rice, Cotton, Wheat, Pulses'
+            }
+        };
+
+        // Function to determine soil type
+        function determineSoilType(sand, silt, clay) {
+            const total = sand + silt + clay;
+            if (total === 0) return 'Invalid';
+            
+            const sandPercent = (sand / total) * 100;
+            const siltPercent = (silt / total) * 100;
+            const clayPercent = (clay / total) * 100;
+            
+            if (clayPercent >= 40) {
+                if (siltPercent >= 40) return 'Silty Clay';
+                if (sandPercent >= 45) return 'Sandy Clay';
+                return 'Clay';
+            } 
+            if (clayPercent >= 27) {
+                if (siltPercent >= 40 && clayPercent < 40) return 'Silty Clay Loam';
+                if (sandPercent >= 45 && clayPercent < 35) return 'Sandy Clay Loam';
+                return 'Clay Loam';
+            }
+            if (siltPercent >= 80) return 'Silt';
+            if (siltPercent >= 50 && clayPercent < 27) return 'Silt Loam';
+            if (sandPercent >= 85 && siltPercent <= 15) return 'Sand';
+            if (sandPercent >= 70 && siltPercent <= 30 && clayPercent <= 15) return 'Loamy Sand';
+            if (sandPercent >= 43 && siltPercent <= 50 && clayPercent <= 20) return 'Sandy Loam';
+            return 'Loam';
+        }
+
+        // Function to calculate characteristics
+        function calculateCharacteristics(sand, silt, clay) {
+            const total = sand + silt + clay;
+            const sandPercent = (sand / total) * 100;
+            const siltPercent = (silt / total) * 100;
+            const clayPercent = (clay / total) * 100;
+
+            return {
+                waterRetention: getWaterRetention(sandPercent, siltPercent, clayPercent),
+                drainage: getDrainage(sandPercent, siltPercent, clayPercent),
+                nutrientRetention: getNutrientRetention(sandPercent, siltPercent, clayPercent),
+                rootGrowth: getRootGrowth(sandPercent, siltPercent, clayPercent)
+            };
+        }
+
+        function getWaterRetention(sand, silt, clay) {
+            const score = (clay * 0.6) + (silt * 0.3) + (sand * 0.1);
+            if (score >= 45) return "Very High";
+            if (score >= 35) return "High";
+            if (score >= 25) return "Moderate";
+            return "Low";
+        }
+
+        function getDrainage(sand, silt, clay) {
+            const score = (sand * 0.6) + (silt * 0.3) + (clay * 0.1);
+            if (score >= 45) return "Excellent";
+            if (score >= 35) return "Good";
+            if (score >= 25) return "Moderate";
+            return "Poor";
+        }
+
+        function getNutrientRetention(sand, silt, clay) {
+            const score = (clay * 0.6) + (silt * 0.3) + (sand * 0.1);
+            if (score >= 45) return "Very High";
+            if (score >= 35) return "High";
+            if (score >= 25) return "Moderate";
+            return "Low";
+        }
+
+        function getRootGrowth(sand, silt, clay) {
+            const balance = Math.min(Math.abs(33.33 - sand), Math.abs(33.33 - silt), Math.abs(33.33 - clay));
+            const score = balance * 3;
+            if (score >= 80) return "Excellent";
+            if (score >= 60) return "Good";
+            if (score >= 40) return "Moderate";
+            return "Poor";
+        }
+
+        // Function to update the display
+        function updateDisplay(sand, silt, clay) {
+            const total = sand + silt + clay;
+            
+            // Update basic values
+            sandValue.textContent = sand;
+            siltValue.textContent = silt;
+            clayValue.textContent = clay;
+            totalValue.textContent = total;
+
+            // Get soil type and characteristics
+            const soilType = determineSoilType(sand, silt, clay);
+            const characteristics = calculateCharacteristics(sand, silt, clay);
+
+            // Update soil type
+            soilTypeResult.textContent = soilType;
+
+            // Update characteristics
+            document.getElementById('waterRetention').textContent = characteristics.waterRetention;
+            document.getElementById('drainage').textContent = characteristics.drainage;
+            document.getElementById('nutrientRetention').textContent = characteristics.nutrientRetention;
+            document.getElementById('rootGrowth').textContent = characteristics.rootGrowth;
+
+            // Update total alert
+            if (total === 100) {
+                totalAlert.className = 'alert alert-success';
+                totalAlert.innerHTML = `Total: ${total}% - <strong>${soilType}</strong>`;
+            } else {
+                totalAlert.className = 'alert alert-warning';
+                totalAlert.innerHTML = `Total: ${total}% - Current type based on proportions: <strong>${soilType}</strong>`;
+            }
+
+            // Update crop recommendations
+            if (soilTypes[soilType] && soilTypes[soilType].crops) {
+                const crops = soilTypes[soilType].crops.split(',');
+                cropRecommendations.innerHTML = crops
+                    .map(crop => `
+                        <span class="badge bg-success me-2 mb-2 p-2">
+                            <i class="fas fa-seedling me-1"></i>
+                            ${crop.trim()}
+                        </span>
+                    `)
+                    .join('');
+            } else {
+                cropRecommendations.innerHTML = '<span class="text-muted">No crop recommendations available</span>';
+            }
+        }
+
+        // Function to handle slider adjustments
+        function adjustSliders(changedSlider) {
+            const sand = parseInt(sandSlider.value);
+            const silt = parseInt(siltSlider.value);
+            const clay = parseInt(claySlider.value);
+            const total = sand + silt + clay;
+
+            if (total > 100) {
+                const excess = total - 100;
+                switch(changedSlider) {
+                    case 'sand':
+                        if (silt + clay > 0) {
+                            const ratio = clay / (silt + clay);
+                            siltSlider.value = Math.max(0, silt - Math.round(excess * (1 - ratio)));
+                            claySlider.value = Math.max(0, clay - Math.round(excess * ratio));
+                        }
+                        break;
+                    case 'silt':
+                        if (sand + clay > 0) {
+                            const ratio = clay / (sand + clay);
+                            sandSlider.value = Math.max(0, sand - Math.round(excess * (1 - ratio)));
+                            claySlider.value = Math.max(0, clay - Math.round(excess * ratio));
+                        }
+                        break;
+                    case 'clay':
+                        if (sand + silt > 0) {
+                            const ratio = silt / (sand + silt);
+                            sandSlider.value = Math.max(0, sand - Math.round(excess * (1 - ratio)));
+                            siltSlider.value = Math.max(0, silt - Math.round(excess * ratio));
+                        }
+                        break;
+                }
+            }
+
+            updateDisplay(
+                parseInt(sandSlider.value),
+                parseInt(siltSlider.value),
+                parseInt(claySlider.value)
+            );
+        }
+
+        // Event listeners for sliders
+        sandSlider.addEventListener('input', () => adjustSliders('sand'));
+        siltSlider.addEventListener('input', () => adjustSliders('silt'));
+        claySlider.addEventListener('input', () => adjustSliders('clay'));
+
+        // Initialize with default values
+        updateDisplay(33, 33, 34);
+
+        // pH Analyzer functionality
+        const phIndicator = document.getElementById('phIndicator');
+        const phValue = document.getElementById('phValue');
+        const phScale = document.querySelector('.ph-scale');
+        const currentPh = document.getElementById('currentPh');
+        const phCondition = document.getElementById('phCondition');
+        const nutrientGrid = document.getElementById('nutrientGrid');
+        const phRecommendations = document.getElementById('phRecommendations');
+
+        // Nutrient availability data
+        const nutrients = {
+            'Nitrogen (N)': { optimal: [6.0, 8.0] },
+            'Phosphorus (P)': { optimal: [6.5, 7.5] },
+            'Potassium (K)': { optimal: [6.0, 7.5] },
+            'Calcium (Ca)': { optimal: [6.5, 8.5] },
+            'Magnesium (Mg)': { optimal: [6.0, 8.5] },
+            'Iron (Fe)': { optimal: [4.0, 6.5] },
+            'Manganese (Mn)': { optimal: [5.0, 6.5] },
+            'Zinc (Zn)': { optimal: [5.0, 7.0] },
+            'Copper (Cu)': { optimal: [5.0, 7.0] },
+            'Boron (B)': { optimal: [5.0, 7.0] }
+        };
+
+        function updatePhDisplay(x) {
+            const width = phScale.offsetWidth - phIndicator.offsetWidth;
+            const position = Math.max(0, Math.min(x, width));
+            const ph = 4 + (position / width) * 6;
+            
+            phIndicator.style.left = `${position}px`;
+            phValue.style.left = `${position + phIndicator.offsetWidth / 2}px`;
+            phValue.textContent = ph.toFixed(1);
+            currentPh.textContent = ph.toFixed(1);
+
+            // Update condition
+            let condition;
+            if (ph < 5.5) condition = 'Very Acidic';
+            else if (ph < 6.5) condition = 'Acidic';
+            else if (ph < 7.5) condition = 'Neutral';
+            else if (ph < 8.5) condition = 'Alkaline';
+            else condition = 'Very Alkaline';
+            phCondition.textContent = condition;
+
+            // Update nutrient availability and recommendations
+            updateNutrientAvailability(ph);
+            updatePhRecommendations(ph);
+        }
+
+        function updateNutrientAvailability(ph) {
+            nutrientGrid.innerHTML = '';
+            
+            Object.entries(nutrients).forEach(([nutrient, data]) => {
+                const availability = getNutrientAvailability(ph, data.optimal);
+                const div = document.createElement('div');
+                div.className = `nutrient-item nutrient-${availability.level}`;
+                div.innerHTML = `
+                    <div>${nutrient}</div>
+                    <div class="fw-bold">${availability.text}</div>
+                `;
+                nutrientGrid.appendChild(div);
+            });
+        }
+
+        function getNutrientAvailability(ph, optimal) {
+            if (ph >= optimal[0] && ph <= optimal[1]) {
+                return { level: 'high', text: 'Optimal' };
+            } else if (ph >= optimal[0] - 1 && ph <= optimal[1] + 1) {
+                return { level: 'medium', text: 'Moderate' };
+            } else {
+                return { level: 'low', text: 'Limited' };
+            }
+        }
+
+        function updatePhRecommendations(ph) {
+            const recommendations = [];
+            
+            if (ph < 6.0) {
+                recommendations.push('Add agricultural lime to raise pH');
+                recommendations.push('Use dolomitic limestone for magnesium deficiency');
+                recommendations.push('Consider wood ash application');
+                recommendations.push('Choose acid-loving plants');
+            } else if (ph > 7.5) {
+                recommendations.push('Add sulfur to lower pH');
+                recommendations.push('Use acidifying fertilizers');
+                recommendations.push('Apply organic matter like pine needles');
+                recommendations.push('Choose alkaline-tolerant plants');
+            } else {
+                recommendations.push('pH is in optimal range for most plants');
+                recommendations.push('Maintain current soil conditions');
+                recommendations.push('Use balanced fertilizers');
+                recommendations.push('Practice crop rotation');
+            }
+
+            phRecommendations.innerHTML = recommendations
+                .map(rec => `<li class="mb-2"><i class="fas fa-check-circle text-success"></i> ${rec}</li>`)
+                .join('');
+        }
+
+        // pH Scale interaction
+        let isDragging = false;
+
+        phIndicator.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            e.preventDefault();
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            
+            const rect = phScale.getBoundingClientRect();
+            const x = e.clientX - rect.left - (phIndicator.offsetWidth / 2);
+            updatePhDisplay(x);
+        });
+
+        document.addEventListener('mouseup', () => {
+            isDragging = false;
+        });
+
+        // Touch events for pH scale
+        phIndicator.addEventListener('touchstart', (e) => {
+            isDragging = true;
+            e.preventDefault();
+        });
+
+        document.addEventListener('touchmove', (e) => {
+            if (!isDragging) return;
+            e.preventDefault();
+            
+            const rect = phScale.getBoundingClientRect();
+            const touch = e.touches[0];
+            const x = touch.clientX - rect.left - (phIndicator.offsetWidth / 2);
+            updatePhDisplay(x);
+        });
+
+        document.addEventListener('touchend', () => {
+            isDragging = false;
+        });
+
+        // Initialize pH display with neutral pH
+        updatePhDisplay(phScale.offsetWidth / 2);
+
+        // Texture Triangle functionality
+        const point = document.getElementById('texturePoint');
+        const triangle = document.querySelector('.texture-triangle');
+        let isTriangleDragging = false;
+
+        // Function to update the texture triangle display
+        function updateTriangleDisplay(sand, silt, clay) {
+            // Update the percentages display
+            document.getElementById('sandPercent').textContent = sand;
+            document.getElementById('siltPercent').textContent = silt;
+            document.getElementById('clayPercent').textContent = clay;
+            
+            // Calculate position in triangle
+            const x = (clay / 100) * triangle.offsetWidth;
+            const y = ((100 - sand) / 100) * triangle.offsetHeight;
+            
+            // Update point position
+            point.style.left = `${x}px`;
+            point.style.top = `${y}px`;
+            
+            // Update soil type display
+            document.getElementById('soilType').textContent = determineSoilType(sand, silt, clay);
+        }
+
+        // Function to get coordinates from mouse/touch event
+        function getCoordinates(e) {
+            const bounds = triangle.getBoundingClientRect();
+            let x, y;
+            
+            if (e.type.includes('touch')) {
+                x = e.touches[0].clientX - bounds.left;
+                y = e.touches[0].clientY - bounds.top;
+            } else {
+                x = e.clientX - bounds.left;
+                y = e.clientY - bounds.top;
+            }
+            
+            // Constrain to triangle bounds
+            x = Math.max(0, Math.min(bounds.width, x));
+            y = Math.max(0, Math.min(bounds.height, y));
+            
+            return { x, y };
+        }
+
+        // Function to calculate soil composition from triangle position
+        function calculateComposition(x, y, width, height) {
+            let clay = Math.round((x / width) * 100);
+            let sand = Math.round(((height - y) / height) * 100);
+            let silt = 100 - sand - clay;
+            
+            // Ensure values are within valid ranges
+            clay = Math.max(0, Math.min(100, clay));
+            sand = Math.max(0, Math.min(100, sand));
+            silt = Math.max(0, Math.min(100, silt));
+            
+            // Normalize to ensure total is 100%
+            const total = sand + silt + clay;
+            if (total > 0) {
+                sand = Math.round((sand / total) * 100);
+                silt = Math.round((silt / total) * 100);
+                clay = 100 - sand - silt;
+            }
+            
+            return { sand, silt, clay };
+        }
+
+        // Event listeners for texture triangle
+        point.addEventListener('mousedown', (e) => {
+            isTriangleDragging = true;
+            e.preventDefault();
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isTriangleDragging) return;
+            
+            const coords = getCoordinates(e);
+            const composition = calculateComposition(coords.x, coords.y, triangle.offsetWidth, triangle.offsetHeight);
+            
+            // Update sliders
+            sandSlider.value = composition.sand;
+            siltSlider.value = composition.silt;
+            claySlider.value = composition.clay;
+            
+            // Update displays
+            updateTriangleDisplay(composition.sand, composition.silt, composition.clay);
+            updateDisplay(composition.sand, composition.silt, composition.clay);
+        });
+
+        document.addEventListener('mouseup', () => {
+            isTriangleDragging = false;
+        });
+
+        // Touch events for texture triangle
+        point.addEventListener('touchstart', (e) => {
+            isTriangleDragging = true;
+            e.preventDefault();
+        });
+
+        document.addEventListener('touchmove', (e) => {
+            if (!isTriangleDragging) return;
+            e.preventDefault();
+            
+            const coords = getCoordinates(e);
+            const composition = calculateComposition(coords.x, coords.y, triangle.offsetWidth, triangle.offsetHeight);
+            
+            // Update sliders and displays
+            sandSlider.value = composition.sand;
+            siltSlider.value = composition.silt;
+            claySlider.value = composition.clay;
+            
+            updateTriangleDisplay(composition.sand, composition.silt, composition.clay);
+            updateDisplay(composition.sand, composition.silt, composition.clay);
+        });
+
+        document.addEventListener('touchend', () => {
+            isTriangleDragging = false;
+        });
+
+        // Initialize triangle display with default values
+        updateTriangleDisplay(33, 33, 34);
+    });
+</script>
+{% endblock %} 

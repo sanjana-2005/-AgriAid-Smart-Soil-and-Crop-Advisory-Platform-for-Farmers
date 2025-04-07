@@ -1,0 +1,530 @@
+{% extends "base.html" %}
+
+{% block title %}Flower Analysis - AgriSmart{% endblock %}
+
+{% block extra_css %}
+<style>
+    body {
+        background: #f8f9fa;
+    }
+
+    .analysis-header {
+        background: linear-gradient(rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.8)),
+                    url('https://images.unsplash.com/photo-1519681393784-d120267933ba?ixlib=rb-1.2.1&auto=format&fit=crop&w=1920&q=80');
+        background-size: cover;
+        background-position: center;
+        color: white;
+        padding: 6rem 0;
+        margin: -2rem 0 4rem 0;
+        text-align: center;
+        position: relative;
+        z-index: 1;
+    }
+
+    .container {
+        position: relative;
+        z-index: 2;
+    }
+
+    .analysis-card {
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        overflow: hidden;
+        transition: transform 0.3s ease;
+        margin-bottom: 2rem;
+        position: relative;
+        z-index: 2;
+    }
+
+    .analysis-card:hover {
+        transform: translateY(-5px);
+    }
+
+    .card-header {
+        background: linear-gradient(45deg, #9c27b0, #673ab7);
+        padding: 2rem;
+        text-align: center;
+    }
+
+    .card-header h4 {
+        font-size: 2rem;
+        font-weight: 700;
+        margin: 0;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+    }
+
+    .upload-area {
+        border: 2px dashed #9c27b0;
+        border-radius: 15px;
+        padding: 3rem 2rem;
+        text-align: center;
+        margin: 2rem 0;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        background: white;
+        position: relative;
+        z-index: 3;
+    }
+
+    .upload-area:hover {
+        background: rgba(156, 39, 176, 0.05);
+        border-color: #673ab7;
+        transform: translateY(-2px);
+    }
+
+    .upload-icon {
+        font-size: 3rem;
+        color: #9c27b0;
+        margin-bottom: 1rem;
+    }
+
+    .features-section {
+        background: white;
+        border-radius: 15px;
+        padding: 2rem;
+        margin-top: 2rem;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        position: relative;
+        z-index: 2;
+    }
+
+    .features-section h5 {
+        color: #9c27b0;
+        font-weight: 600;
+        margin-bottom: 1.5rem;
+    }
+
+    .features-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+        margin-top: 1.5rem;
+    }
+
+    .feature-item {
+        text-align: center;
+        padding: 1.5rem;
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        transition: all 0.3s ease;
+    }
+
+    .feature-item:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+    }
+
+    .feature-icon {
+        font-size: 2rem;
+        color: #9c27b0;
+        margin-bottom: 1rem;
+    }
+
+    .analyze-btn {
+        background: linear-gradient(45deg, #9c27b0, #673ab7);
+        border: none;
+        padding: 1rem 3rem;
+        font-size: 1.2rem;
+        font-weight: 600;
+        border-radius: 50px;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(156, 39, 176, 0.3);
+        color: white;
+        margin-top: 1rem;
+        position: relative;
+        z-index: 4;
+    }
+
+    .analyze-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(156, 39, 176, 0.4);
+        background: linear-gradient(45deg, #8e24aa, #5e35b1);
+    }
+
+    .preview-container {
+        margin: 2rem 0;
+        display: none;
+        text-align: center;
+        position: relative;
+        z-index: 2;
+    }
+
+    .preview-image {
+        max-width: 100%;
+        border-radius: 10px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        background: white;
+    }
+
+    .result-container {
+        display: none;
+        margin-top: 2rem;
+        text-align: center;
+        background: white;
+        padding: 2rem;
+        border-radius: 15px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        position: relative;
+        z-index: 2;
+    }
+
+    .result-image {
+        max-width: 100%;
+        border-radius: 10px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        margin-top: 1rem;
+        background: white;
+        position: relative;
+        z-index: 3;
+    }
+
+    .result-title {
+        color: #9c27b0;
+        font-weight: 600;
+        margin-bottom: 1.5rem;
+        font-size: 1.5rem;
+    }
+
+    .result-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1rem;
+        margin-top: 1rem;
+        margin-bottom: 1.5rem;
+        background: #f8f9fa;
+        padding: 1rem;
+        border-radius: 10px;
+    }
+
+    .result-label {
+        font-size: 0.9rem;
+        color: #333;
+        font-weight: 500;
+        padding: 0.5rem;
+        background: white;
+        border-radius: 8px;
+        margin: 0;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    .file-input {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        top: 0;
+        left: 0;
+        opacity: 0;
+        cursor: pointer;
+        z-index: 4;
+    }
+
+    .upload-area {
+        position: relative;
+    }
+
+    @media (max-width: 768px) {
+        .analysis-header {
+            padding: 4rem 0;
+        }
+        
+        .card-header h4 {
+            font-size: 1.5rem;
+        }
+
+        .features-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .result-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    /* Hide any spinners that might be added dynamically */
+    .loading-spinner, .spinner, .loader {
+        display: none !important;
+        opacity: 0 !important;
+        visibility: hidden !important;
+    }
+
+    /* Add some spacing between sections */
+    .card-body {
+        padding: 2rem !important;
+        position: relative;
+        z-index: 2;
+        background: white;
+    }
+
+    /* Remove any potential overlay */
+    .overlay, .white-overlay {
+        display: none !important;
+        opacity: 0 !important;
+        visibility: hidden !important;
+    }
+
+    /* Additional fixes for potential overlay issues */
+    .modal-backdrop {
+        display: none !important;
+    }
+
+    .fade {
+        opacity: 1 !important;
+    }
+
+    /* Ensure proper stacking of elements */
+    .card-body {
+        position: relative;
+        z-index: 2;
+        background: white;
+    }
+
+    .features-section {
+        position: relative;
+        z-index: 2;
+        background: white;
+    }
+
+    .preview-container {
+        position: relative;
+        z-index: 2;
+    }
+
+    /* Ensure the upload area is above any potential overlay */
+    .upload-area {
+        position: relative;
+        z-index: 3;
+        background: white;
+    }
+
+    /* Make sure form elements are clickable */
+    form {
+        position: relative;
+        z-index: 3;
+    }
+
+    .file-input {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        top: 0;
+        left: 0;
+        opacity: 0;
+        cursor: pointer;
+        z-index: 4;
+    }
+
+    /* Ensure buttons are clickable */
+    .analyze-btn {
+        position: relative;
+        z-index: 4;
+    }
+
+    /* Hide any unwanted overlays */
+    *[class*="overlay"],
+    *[class*="backdrop"],
+    *[class*="modal-backdrop"] {
+        display: none !important;
+        opacity: 0 !important;
+        visibility: hidden !important;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Header Section -->
+<section class="analysis-header">
+    <div class="container">
+        <h1 class="display-4 mb-3">Flower Analysis</h1>
+        <p class="lead">Upload a flower image for detailed UV simulation and vein analysis</p>
+    </div>
+</section>
+
+<!-- Main Content -->
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="analysis-card">
+                <div class="card-header">
+                    <h4>Analyze Your Flower</h4>
+                </div>
+                <div class="card-body p-4">
+                    <form method="POST" enctype="multipart/form-data" id="flowerForm">
+                        <div class="upload-area" id="uploadArea">
+                            <div class="upload-icon">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                            </div>
+                            <h5>Drag & Drop or Click to Upload</h5>
+                            <p class="text-muted">Supported formats: JPG, PNG (Max 5MB)</p>
+                            <input type="file" class="file-input" id="file" name="file" accept="image/*" required>
+                            <label for="file" class="file-label"></label>
+                        </div>
+
+                        <div class="preview-container" id="previewContainer">
+                            <img src="" alt="Preview" class="preview-image" id="previewImage">
+                        </div>
+
+                        <div class="text-center mt-4">
+                            <button type="submit" class="btn analyze-btn">
+                                <i class="fas fa-flask me-2"></i>Analyze Flower
+                            </button>
+                        </div>
+                    </form>
+
+                    <div class="features-section">
+                        <h5><i class="fas fa-star me-2"></i>Analysis Features</h5>
+                        <div class="features-grid">
+                            <div class="feature-item">
+                                <div class="feature-icon">
+                                    <i class="fas fa-adjust"></i>
+                                </div>
+                                <h6>UV Simulation</h6>
+                                <p class="text-muted">Simulate UV fluorescence effects</p>
+                            </div>
+                            <div class="feature-item">
+                                <div class="feature-icon">
+                                    <i class="fas fa-network-wired"></i>
+                                </div>
+                                <h6>Vein Detection</h6>
+                                <p class="text-muted">Detailed vein pattern analysis</p>
+                            </div>
+                            <div class="feature-item">
+                                <div class="feature-icon">
+                                    <i class="fas fa-texture"></i>
+                                </div>
+                                <h6>Texture Analysis</h6>
+                                <p class="text-muted">Enhanced texture visualization</p>
+                            </div>
+                            <div class="feature-item">
+                                <div class="feature-icon">
+                                    <i class="fas fa-palette"></i>
+                                </div>
+                                <h6>Color Mapping</h6>
+                                <p class="text-muted">Advanced color analysis</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="result-container" id="resultContainer">
+                        <h5 class="result-title">Analysis Results</h5>
+                        <div class="result-grid">
+                            <div>
+                                <p class="result-label">Original (Grayscale)</p>
+                            </div>
+                            <div>
+                                <p class="result-label">Enhanced Texture</p>
+                            </div>
+                            <div>
+                                <p class="result-label">UV Simulation</p>
+                            </div>
+                            <div>
+                                <p class="result-label">Vein Detection</p>
+                            </div>
+                        </div>
+                        <img src="" alt="Analysis Results" class="result-image" id="resultImage">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Remove any existing loading spinners
+        const spinners = document.querySelectorAll('.loading-spinner, .spinner, .loader');
+        spinners.forEach(spinner => spinner.remove());
+
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('file');
+        const previewContainer = document.getElementById('previewContainer');
+        const previewImage = document.getElementById('previewImage');
+        const resultContainer = document.getElementById('resultContainer');
+        const resultImage = document.getElementById('resultImage');
+        const flowerForm = document.getElementById('flowerForm');
+
+        // Handle drag and drop
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.style.borderColor = '#673ab7';
+            uploadArea.style.background = 'rgba(103, 58, 183, 0.1)';
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.style.borderColor = '#9c27b0';
+            uploadArea.style.background = 'transparent';
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.style.borderColor = '#9c27b0';
+            uploadArea.style.background = 'transparent';
+            const file = e.dataTransfer.files[0];
+            handleFile(file);
+        });
+
+        // Handle file selection
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            handleFile(file);
+        });
+
+        function handleFile(file) {
+            if (file && file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    previewImage.src = e.target.result;
+                    previewContainer.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // Handle form submission
+        flowerForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(flowerForm);
+            
+            try {
+                // Remove any spinners that might exist
+                document.querySelectorAll('.loading-spinner, .spinner, .loader').forEach(el => el.remove());
+                
+                const response = await fetch('/analyze-flower', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.result_image) {
+                        // Update the result image source with cache-busting
+                        resultImage.src = data.result_image + '?t=' + new Date().getTime();
+                        resultContainer.style.display = 'block';
+                        // Scroll to the result
+                        resultContainer.scrollIntoView({ behavior: 'smooth' });
+                    } else {
+                        alert('No result image received');
+                    }
+                } else {
+                    const error = await response.json();
+                    alert(error.error || 'Error analyzing the image. Please try again.');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred. Please try again.');
+            } finally {
+                // Make sure any spinners are removed after the request completes
+                document.querySelectorAll('.loading-spinner, .spinner, .loader').forEach(el => el.remove());
+            }
+        });
+
+        // Additional cleanup on page load
+        window.addEventListener('load', () => {
+            document.querySelectorAll('.loading-spinner, .spinner, .loader').forEach(el => el.remove());
+        });
+    });
+</script>
+{% endblock %} 
